@@ -159,6 +159,7 @@ RUN apk add --no-cache --virtual \
         libffi-dev \
         linux-headers && \
     apk add \
+    	bash \
         postfix \
         postgresql-client \
         postgresql-libs \
