@@ -1,5 +1,27 @@
 #!/bin/sh
 
+file_env() {
+   local var="$1"
+   local fileVar="${var}_FILE"
+   local def="${2:-}"
+
+   if [ "${!var:-}" ] && [ "${!fileVar:-}" ]; then
+      echo >&2 "error: both $var and $fileVar are set (but are exclusive)"
+      exit 1
+   fi
+   local val="$def"
+   if [ "${!var:-}" ]; then
+      val="${!var}"
+   elif [ "${!fileVar:-}" ]; then
+      val="$(< "${!fileVar}")"
+   fi
+   export "$var"="$val"
+   unset "$fileVar"
+}
+
+file_env "PGADMIN_DEFAULT_EMAIL"
+file_env "PGADMIN_DEFAULT_PASSWORD"
+
 # Populate config_distro.py. This has some default config, as well as anything
 # provided by the user through the PGADMIN_CONFIG_* environment variables.
 # Only update the file on first launch. The empty file is created during the
@@ -46,6 +68,12 @@ if [ ! -f /var/lib/pgadmin/pgadmin4.db ]; then
         fi
     fi
 fi
+
+# unset variables
+unset PGADMIN_DEFAULT_EMAIL
+unset PGADMIN_DEFAULT_PASSWORD
+unset PGADMIN_SETUP_EMAIL
+unset PGADMIN_SETUP_PASSWORD
 
 # Start Postfix to handle password resets etc.
 sudo /usr/sbin/postfix start
